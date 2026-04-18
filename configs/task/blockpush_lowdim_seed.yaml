@@ -1,0 +1,63 @@
+name: blockpush_lowdim_seed
+
+env_suite: blockpush
+modality: lowdim
+dataset_source: blockpush
+supports_pretrain: true
+supports_finetune: false
+obs_dim: 16
+action_dim: 2
+horizon_steps: 16
+n_obs_steps: 2
+n_action_steps: 8
+abs_action: false
+obs_eef_target: true
+
+policy:
+  _target_: dbpo.methods.dbp.policies.LowdimDBPPolicy
+  obs_dim: ${task.obs_dim}
+  action_dim: ${task.action_dim}
+  horizon: ${task.horizon_steps}
+  n_action_steps: ${task.n_action_steps}
+  n_obs_steps: ${task.n_obs_steps}
+  temperatures: ${model.temperatures}
+  gen_per_label: ${model.gen_per_label}
+  per_timestep_loss: ${model.per_timestep_loss}
+  backbone_kwargs: ${model.backbone}
+
+train_dataset:
+  _target_: dbpo.dataset.blockpush_dataset.BlockPushLowdimDataset
+  zarr_path: ${oc.env:DBPO_DATA_DIR}/blockpush/multimodal_push_seed.zarr
+  horizon: ${task.horizon_steps}
+  pad_before: 1
+  pad_after: 7
+  seed: ${seed}
+  val_ratio: 0.02
+  abs_action: ${task.abs_action}
+
+runner:
+  _target_: dbpo.envs.runners.blockpush_runner.BlockPushLowdimRunner
+  output_dir: ${logdir}
+  n_train: 6
+  n_train_vis: 2
+  n_test: 50
+  n_test_vis: 4
+  max_steps: 350
+  n_obs_steps: ${task.n_obs_steps}
+  n_action_steps: ${task.n_action_steps}
+  fps: 5
+  abs_action: ${task.abs_action}
+  obs_eef_target: ${task.obs_eef_target}
+
+env_cfg:
+  name: blockpush
+  env_type: blockpush
+  n_envs: 40
+  max_episode_steps: 350
+  best_reward_threshold_for_success: 1.0
+  wrappers:
+    multi_step:
+      n_obs_steps: ${task.n_obs_steps}
+      n_action_steps: ${task.n_action_steps}
+      max_episode_steps: 350
+      reset_within_step: true

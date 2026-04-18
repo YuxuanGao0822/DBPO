@@ -1,0 +1,10 @@
+can_lowdim
+can_image
+pusht_image
+blockpush_lowdim_seed
+kitchen_lowdim
+adroit_hammer
+metaworld_assembly
+hopper-medium-v2
+ant-medium-expert-v2
+walker2d-medium-v2

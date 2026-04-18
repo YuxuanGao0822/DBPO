@@ -1,0 +1,78 @@
+name: dbpo
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.10
+  - pip>=23.0
+  - cudatoolkit=11.8
+
+  - pytorch=2.4.1
+  - torchvision=0.19.1
+  - torchaudio=2.4.1
+
+  - numpy=1.24.4
+  - scipy=1.11.4
+  - numba=0.59.1
+  - h5py=3.10.0
+  - zarr=2.17.2
+  - numcodecs=0.12.1
+
+  - cython=0.29.37
+
+  - py-opencv=4.9.0
+  - imageio=2.34.2
+  - imageio-ffmpeg=0.4.9
+  - av=12.3.0
+
+  - hydra-core=1.3.2
+  - omegaconf=2.3.0
+
+  - tensorboard=2.14.0
+  - tensorboardx=2.6.2.2
+
+  - tqdm=4.66.5
+  - einops=0.8.0
+  - dill=0.3.8
+  - matplotlib=3.8.4
+  - pandas=2.0.3
+  - seaborn=0.13.2
+  - psutil=5.9.8
+  - threadpoolctl=3.5.0
+  - filelock=3.13.4
+  - click=8.1.7
+  - termcolor=2.4.0
+  - shapely=2.0.4
+  - pymunk=6.6.0
+  - cmake=3.28.4
+
+  - glew
+  - mesalib
+  - patchelf
+
+  - pip:
+    - wandb==0.17.7
+
+    - mujoco==3.1.6
+    - mujoco-py==2.1.2.14
+    - dm_control==1.0.16
+
+    - gym==0.23.1
+
+    - robomimic==0.3.0
+    - robosuite==1.4.1
+
+    - imagecodecs==2024.1.1
+    - gdown==5.2.0
+    - pretty_errors==1.2.25
+    - pypdf>=3.9.0
+    - natsort==8.4.0
+    - open3d==0.18.0
+    - moviepy==1.0.3
+    - pygame==2.5.2
+    - scikit-image==0.22.0
+    - pybullet==3.2.6
+    - egl_probe @ https://api.github.com/repos/mhandb/egl_probe/zipball/fix_windows_build

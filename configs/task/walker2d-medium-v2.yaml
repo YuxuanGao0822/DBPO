@@ -1,0 +1,59 @@
+# ============================================================
+# Task: D4RL gym Walker2d medium v2
+# Source contract follows the D4RL D4RL processing standard.
+# ============================================================
+name: walker2d-medium-v2
+
+env: walker2d-medium-v2
+env_suite: gym
+modality: lowdim
+dataset_source: d4rl
+supports_pretrain: true
+supports_finetune: true
+
+obs_dim: 17
+action_dim: 6
+horizon_steps: 4
+n_obs_steps: 1
+n_action_steps: 4
+
+policy:
+  _target_: dbpo.methods.dbp.policies.LowdimDBPPolicy
+  obs_dim: ${task.obs_dim}
+  action_dim: ${task.action_dim}
+  horizon: ${task.horizon_steps}
+  n_action_steps: ${task.n_action_steps}
+  n_obs_steps: ${task.n_obs_steps}
+  temperatures: ${model.temperatures}
+  gen_per_label: ${model.gen_per_label}
+  per_timestep_loss: ${model.per_timestep_loss}
+  backbone_kwargs: ${model.backbone}
+
+finetune_actor: ${task.policy}
+offline_dataset_path: ${oc.env:DBPO_DATA_DIR}/gym/${task.env}/train.npz
+normalization_path: ${oc.env:DBPO_DATA_DIR}/gym/${task.env}/normalization.npz
+
+train_dataset:
+  _target_: dbpo.dataset.d4rl_sequence_dataset.StitchedSequenceDataset
+  dataset_path: ${task.offline_dataset_path}
+  horizon_steps: ${task.horizon_steps}
+  cond_steps: ${task.n_obs_steps}
+  max_n_episodes: -1
+  device: ${device}
+
+runner: null
+
+env_cfg:
+  name: ${task.env}
+  env_type: d4rl
+  n_envs: 40
+  max_episode_steps: 1000
+  best_reward_threshold_for_success: 3.0
+  wrappers:
+    mujoco_locomotion_lowdim:
+      normalization_path: ${task.normalization_path}
+    multi_step:
+      n_obs_steps: ${task.n_obs_steps}
+      n_action_steps: ${task.n_action_steps}
+      max_episode_steps: 1000
+      reset_within_step: true

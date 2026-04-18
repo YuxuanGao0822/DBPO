@@ -1,0 +1,105 @@
+name: tool_hang_image
+
+env: tool_hang
+env_suite: robomimic
+modality: image
+dataset_source: robomimic
+supports_pretrain: true
+supports_finetune: false
+action_dim: 7
+horizon_steps: 4
+n_obs_steps: 1
+n_action_steps: 4
+abs_action: false
+max_steps: 700
+render_obs_key: sideview_image
+shape_meta:
+  obs:
+    sideview_image:
+      shape: [3, 240, 240]
+      type: rgb
+    robot0_eye_in_hand_image:
+      shape: [3, 240, 240]
+      type: rgb
+    robot0_eef_pos:
+      shape: [3]
+      type: low_dim
+    robot0_eef_quat:
+      shape: [4]
+      type: low_dim
+    robot0_gripper_qpos:
+      shape: [2]
+      type: low_dim
+  action:
+    shape: [7]
+
+policy:
+  _target_: dbpo.methods.dbp.policies.ImageDBPPolicy
+  obs_encoder:
+    _target_: dbpo.models.encoders.image.MultiImageResNetEncoder
+    shape_meta: ${task.shape_meta}
+    rgb_feature_dim: ${model.image_encoder.rgb_feature_dim}
+    crop_shape: ${model.image_encoder.crop_shape}
+    use_group_norm: ${model.image_encoder.use_group_norm}
+    eval_fixed_crop: ${model.image_encoder.eval_fixed_crop}
+    share_rgb_model: ${model.image_encoder.share_rgb_model}
+    imagenet_norm: ${model.image_encoder.imagenet_norm}
+    pretrained_backbone: ${model.image_encoder.pretrained_backbone}
+  action_dim: ${task.action_dim}
+  horizon: ${task.horizon_steps}
+  n_action_steps: ${task.n_action_steps}
+  n_obs_steps: ${task.n_obs_steps}
+  temperatures: ${model.temperatures}
+  gen_per_label: ${model.gen_per_label}
+  per_timestep_loss: ${model.per_timestep_loss}
+  backbone_kwargs: ${model.backbone}
+
+env_dataset_path: ${oc.env:DBPO_DATA_DIR}/robomimic/tool_hang/image.hdf5
+train_dataset:
+  _target_: dbpo.dataset.robomimic_image_dataset.RobomimicReplayImageDataset
+  shape_meta: ${task.shape_meta}
+  dataset_path: ${task.env_dataset_path}
+  horizon: ${task.horizon_steps}
+  pad_before: 1
+  pad_after: 7
+  n_obs_steps: ${task.n_obs_steps}
+  abs_action: ${task.abs_action}
+  rotation_rep: rotation_6d
+  use_legacy_normalizer: false
+  use_cache: true
+  seed: ${seed}
+  val_ratio: 0.02
+
+runner:
+  _target_: dbpo.envs.runners.robomimic_image_runner.RobomimicImageRunner
+  output_dir: ${logdir}
+  dataset_path: ${task.env_dataset_path}
+  shape_meta: ${task.shape_meta}
+  n_train: 6
+  n_train_vis: 2
+  n_test: 50
+  n_test_vis: 4
+  max_steps: ${task.max_steps}
+  n_obs_steps: ${task.n_obs_steps}
+  n_action_steps: ${task.n_action_steps}
+  render_obs_key: ${task.render_obs_key}
+  fps: 10
+  abs_action: ${task.abs_action}
+
+env_cfg:
+  name: ${task.env}
+  env_type: robomimic
+  n_envs: 28
+  max_episode_steps: ${task.max_steps}
+  best_reward_threshold_for_success: 1.0
+  wrappers:
+    robomimic_image:
+      shape_meta: ${task.shape_meta}
+      image_keys: [sideview_image, robot0_eye_in_hand_image]
+      low_dim_keys: [robot0_eef_pos, robot0_eef_quat, robot0_gripper_qpos]
+      render_obs_key: ${task.render_obs_key}
+    multi_step:
+      n_obs_steps: ${task.n_obs_steps}
+      n_action_steps: ${task.n_action_steps}
+      max_episode_steps: ${task.max_steps}
+      reset_within_step: true

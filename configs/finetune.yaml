@@ -1,0 +1,85 @@
+defaults:
+  - _self_
+  - task: hopper-medium-v2
+  - model: default
+
+_target_: dbpo.workspaces.finetune.DBPOFinetuneWorkspace
+
+hydra:
+  run:
+    dir: ${logdir}
+  job:
+    chdir: false
+
+name: dbpo_finetune_${task.name}_seed${seed}
+logdir: outputs/${name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+seed: 42
+device: cuda:0
+actor_policy_path: ???
+
+obs_dim: ${task.obs_dim}
+action_dim: ${task.action_dim}
+horizon_steps: ${task.horizon_steps}
+act_steps: ${task.n_action_steps}
+cond_steps: ${task.n_obs_steps}
+shape_meta: ${oc.select:task.shape_meta,null}
+
+env: ${task.env_cfg}
+
+model:
+  _target_: dbpo.methods.dbpo.ppo_adapter.DBPOPolicyOptimizer
+  actor: ${task.finetune_actor}
+  critic:
+    _target_: dbpo.model.common.critic.ValueCritic
+    obs_dim: ${task.obs_dim}
+    n_obs_steps: ${task.n_obs_steps}
+  actor_policy_path: ${actor_policy_path}
+  device: ${device}
+  horizon_steps: ${task.horizon_steps}
+  action_dim: ${task.action_dim}
+  act_min: -1.0
+  act_max: 1.0
+  executed_act_steps: ${task.n_action_steps}
+  clip_ploss_coef: 0.02
+  norm_adv: true
+  anchor_loss_coeff: 1.0
+
+train:
+  n_train_itr: 1500
+  n_steps: 500
+  batch_size: 50000
+  update_epochs: 5
+  gamma: 0.99
+  gae_lambda: 0.95
+  n_critic_warmup_itr: 5
+  ent_coef: 0.01
+  vf_coef: 0.5
+  max_grad_norm: 0.5
+  target_kl: 0.02
+  reward_scale_running: true
+  reward_scale_const: 1.0
+  actor_lr: 1.0e-5
+  actor_weight_decay: 1.0e-6
+  actor_lr_scheduler:
+    first_cycle_steps: 1500
+    warmup_steps: 10
+    min_lr: 3.0e-6
+  critic_lr: 1.0e-4
+  critic_weight_decay: 1.0e-6
+  critic_lr_scheduler:
+    first_cycle_steps: 1500
+    warmup_steps: 10
+    min_lr: 3.0e-5
+  normalize_act_space_dimension: true
+  clip_intermediate_actions: true
+  save_model_freq: 50
+  val_freq: 10
+  log_freq: 1
+
+wandb:
+  entity: null
+  project: dbpo-${task.name}
+  run: ${now:%H-%M-%S}_${name}
+  offline_mode: false
+  dir: ./wandb

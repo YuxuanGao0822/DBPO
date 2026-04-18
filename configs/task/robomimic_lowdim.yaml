@@ -1,0 +1,95 @@
+# ============================================================
+# Task: Robomimic low-dimensional (can / lift / square / transport)
+# Override env with: task.env=lift  task.env=square  etc.
+# ============================================================
+name: robomimic_lowdim_${env}
+
+env: can                        # override: lift | square | transport | can
+env_suite: robomimic
+modality: lowdim
+dataset_source: robomimic
+supports_pretrain: true
+supports_finetune: false
+
+# Observation / action dimensions (can / lift / square)
+obs_dim: 23
+action_dim: 7
+horizon_steps: 4
+n_obs_steps: 1
+n_action_steps: 4
+
+policy:
+  _target_: dbpo.methods.dbp.policies.LowdimDBPPolicy
+  obs_dim: ${task.obs_dim}
+  action_dim: ${task.action_dim}
+  horizon: ${task.horizon_steps}
+  n_action_steps: ${task.n_action_steps}
+  n_obs_steps: ${task.n_obs_steps}
+  temperatures: ${model.temperatures}
+  gen_per_label: ${model.gen_per_label}
+  per_timestep_loss: ${model.per_timestep_loss}
+  backbone_kwargs: ${model.backbone}
+
+finetune_actor: ${task.policy}
+
+# Finetune env construction needs the original HDF5 for robomimic metadata.
+env_dataset_path: ${oc.env:DBPO_DATA_DIR}/robomimic/${env}/low_dim.hdf5
+
+# Optional offline export path for auxiliary preprocessing workflows.
+offline_dataset_path: ${oc.env:DBPO_DATA_DIR}/robomimic/${env}/train.npz
+
+# Compatibility alias consumed by finetune workspace / vector env factory.
+dataset_path: ${task.env_dataset_path}
+
+train_dataset:
+  _target_: dbpo.dataset.robomimic_lowdim_dataset.RobomimicReplayLowdimDataset
+  dataset_path: ${task.env_dataset_path}
+  horizon: ${task.horizon_steps}
+  pad_before: 1
+  pad_after: 7
+  obs_keys:
+    - object
+    - robot0_eef_pos
+    - robot0_eef_quat
+    - robot0_gripper_qpos
+  abs_action: false
+  seed: ${seed}
+  val_ratio: 0.02
+
+# Evaluation runner
+runner:
+  _target_: dbpo.envs.runners.robomimic_lowdim_runner.RobomimicLowdimRunner
+  output_dir: ${logdir}
+  dataset_path: ${task.env_dataset_path}
+  obs_keys:
+    - object
+    - robot0_eef_pos
+    - robot0_eef_quat
+    - robot0_gripper_qpos
+  n_train: 6
+  n_train_vis: 2
+  n_test: 50
+  n_test_vis: 6
+  max_steps: 400
+  n_obs_steps: ${task.n_obs_steps}
+  n_action_steps: ${task.n_action_steps}
+
+# Vectorised env config (for PPO fine-tuning)
+env_cfg:
+  name: ${task.env}
+  env_type: robomimic
+  n_envs: 40
+  max_episode_steps: 400
+  best_reward_threshold_for_success: 1.0
+  wrappers:
+    robomimic_lowdim:
+      low_dim_keys:
+        - object
+        - robot0_eef_pos
+        - robot0_eef_quat
+        - robot0_gripper_qpos
+    multi_step:
+      n_obs_steps: ${task.n_obs_steps}
+      n_action_steps: ${task.n_action_steps}
+      max_episode_steps: 400
+      reset_within_step: true

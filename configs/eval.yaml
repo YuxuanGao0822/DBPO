@@ -1,0 +1,25 @@
+defaults:
+  - _self_
+  - task: robomimic_lowdim
+  - model: default
+
+hydra:
+  run:
+    dir: ${logdir}
+  job:
+    chdir: false
+
+_target_: dbpo.workspaces.eval.DBPOEvalWorkspace
+
+name: eval_${task.name}_seed${seed}
+logdir: outputs/eval/${name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+seed: 42
+device: cuda:0
+checkpoint_path: ???
+use_ema: true
+
+wandb: null
+
+policy: ${task.policy}
+env_runner: ${task.runner}

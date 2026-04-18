@@ -1,0 +1,5 @@
+adroit_door
+adroit_hammer
+adroit_pen
+metaworld_assembly
+metaworld_hammer

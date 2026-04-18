@@ -1,0 +1,26 @@
+# Common model defaults shared across DBP / DBPO entrypoints.
+
+backbone:
+  down_dims: [512, 1024, 2048]
+  kernel_size: 5
+  n_groups: 8
+  cond_predict_scale: true
+
+temperatures: [0.02, 0.05, 0.2]
+gen_per_label: 4
+per_timestep_loss: false
+
+image_encoder:
+  rgb_feature_dim: 128
+  crop_shape: [84, 84]
+  use_group_norm: true
+  eval_fixed_crop: true
+  share_rgb_model: false
+  imagenet_norm: false
+  pretrained_backbone: false
+
+pointcloud_encoder:
+  point_feature_dim: 256
+  state_feature_dim: 64
+  point_hidden_dims: [64, 128, 256]
+  state_hidden_dims: [64]

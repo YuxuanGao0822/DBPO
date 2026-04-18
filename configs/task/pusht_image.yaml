@@ -1,0 +1,83 @@
+# ============================================================
+# Task: PushT image
+# ============================================================
+name: pusht_image
+
+env_suite: pusht
+modality: image
+dataset_source: pusht
+supports_pretrain: true
+supports_finetune: false
+obs_dim: 2                      # agent_pos only (image handled by encoder)
+action_dim: 2
+horizon_steps: 16
+n_obs_steps: 2
+n_action_steps: 8
+
+shape_meta:
+  obs:
+    image:
+      shape: [3, 96, 96]
+      type: rgb
+    agent_pos:
+      shape: [2]
+      type: low_dim
+  action:
+    shape: [2]
+
+policy:
+  _target_: dbpo.methods.dbp.policies.ImageDBPPolicy
+  obs_encoder:
+    _target_: dbpo.models.encoders.image.MultiImageResNetEncoder
+    shape_meta: ${task.shape_meta}
+    rgb_feature_dim: ${model.image_encoder.rgb_feature_dim}
+    crop_shape: ${model.image_encoder.crop_shape}
+    use_group_norm: ${model.image_encoder.use_group_norm}
+    eval_fixed_crop: ${model.image_encoder.eval_fixed_crop}
+    share_rgb_model: ${model.image_encoder.share_rgb_model}
+    imagenet_norm: ${model.image_encoder.imagenet_norm}
+    pretrained_backbone: ${model.image_encoder.pretrained_backbone}
+  action_dim: ${task.action_dim}
+  horizon: ${task.horizon_steps}
+  n_action_steps: ${task.n_action_steps}
+  n_obs_steps: ${task.n_obs_steps}
+  temperatures: ${model.temperatures}
+  gen_per_label: ${model.gen_per_label}
+  per_timestep_loss: ${model.per_timestep_loss}
+  backbone_kwargs: ${model.backbone}
+
+train_dataset:
+  _target_: dbpo.dataset.pusht_image_dataset.PushTImageDataset
+  zarr_path: ${oc.env:DBPO_DATA_DIR}/pusht/pusht_cchi_v7_replay.zarr
+  horizon: ${task.horizon_steps}
+  pad_before: 1
+  pad_after: 7
+  seed: ${seed}
+  val_ratio: 0.02
+
+runner:
+  _target_: dbpo.envs.runners.pusht_runner.PushTImageRunner
+  output_dir: ${logdir}
+  n_train: 10
+  n_train_vis: 3
+  n_test: 22
+  n_test_vis: 6
+  max_steps: 200
+  n_obs_steps: ${task.n_obs_steps}
+  n_action_steps: ${task.n_action_steps}
+  fps: 10
+  render_size: 96
+
+# Vectorised env config (for PPO fine-tuning)
+env_cfg:
+  name: pusht
+  env_type: pusht
+  n_envs: 14
+  max_episode_steps: 300
+  best_reward_threshold_for_success: 1.0
+  wrappers:
+    multi_step:
+      n_obs_steps: ${task.n_obs_steps}
+      n_action_steps: ${task.n_action_steps}
+      max_episode_steps: 300
+      reset_within_step: true

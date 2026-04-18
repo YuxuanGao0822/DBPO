@@ -1,0 +1,57 @@
+name: metaworld_door-close
+
+task_name: door-close
+env_suite: metaworld
+modality: pointcloud
+dataset_source: metaworld
+supports_pretrain: true
+supports_finetune: false
+obs_dim: 9
+action_dim: 4
+horizon_steps: 4
+n_obs_steps: 2
+n_action_steps: 4
+point_channels: 6
+
+policy:
+  _target_: dbpo.methods.dbp.policies.PointCloudDBPPolicy
+  obs_encoder:
+    _target_: dbpo.models.encoders.pointcloud.PointCloudObsEncoder
+    state_dim: ${task.obs_dim}
+    point_channels: ${task.point_channels}
+    point_feature_dim: ${model.pointcloud_encoder.point_feature_dim}
+    state_feature_dim: ${model.pointcloud_encoder.state_feature_dim}
+    point_hidden_dims: ${model.pointcloud_encoder.point_hidden_dims}
+    state_hidden_dims: ${model.pointcloud_encoder.state_hidden_dims}
+  action_dim: ${task.action_dim}
+  horizon: ${task.horizon_steps}
+  n_action_steps: ${task.n_action_steps}
+  n_obs_steps: ${task.n_obs_steps}
+  temperatures: ${model.temperatures}
+  gen_per_label: ${model.gen_per_label}
+  per_timestep_loss: ${model.per_timestep_loss}
+  backbone_kwargs: ${model.backbone}
+
+train_dataset:
+  _target_: dbpo.dataset.metaworld_dataset.MetaworldDataset
+  zarr_path: ${oc.env:DBPO_DATA_DIR}/metaworld/door-close/train.zarr
+  horizon: ${task.horizon_steps}
+  pad_before: 1
+  pad_after: 3
+  seed: ${seed}
+  val_ratio: 0.02
+
+runner: null
+
+env_cfg:
+  name: ${task.task_name}-v2-goal-observable
+  env_type: metaworld
+  n_envs: 40
+  max_episode_steps: 500
+  best_reward_threshold_for_success: 1.0
+  wrappers:
+    multi_step:
+      n_obs_steps: ${task.n_obs_steps}
+      n_action_steps: ${task.n_action_steps}
+      max_episode_steps: 500
+      reset_within_step: true

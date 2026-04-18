@@ -1,0 +1,74 @@
+name: tool_hang_lowdim_abs
+
+env: tool_hang
+env_suite: robomimic
+modality: lowdim
+dataset_source: robomimic
+supports_pretrain: true
+supports_finetune: false
+obs_dim: 53
+action_dim: 10
+horizon_steps: 4
+n_obs_steps: 1
+n_action_steps: 4
+abs_action: true
+max_steps: 700
+obs_keys:
+  - object
+  - robot0_eef_pos
+  - robot0_eef_quat
+  - robot0_gripper_qpos
+
+policy:
+  _target_: dbpo.methods.dbp.policies.LowdimDBPPolicy
+  obs_dim: ${task.obs_dim}
+  action_dim: ${task.action_dim}
+  horizon: ${task.horizon_steps}
+  n_action_steps: ${task.n_action_steps}
+  n_obs_steps: ${task.n_obs_steps}
+  temperatures: ${model.temperatures}
+  gen_per_label: ${model.gen_per_label}
+  per_timestep_loss: ${model.per_timestep_loss}
+  backbone_kwargs: ${model.backbone}
+
+env_dataset_path: ${oc.env:DBPO_DATA_DIR}/robomimic/tool_hang/low_dim_abs.hdf5
+train_dataset:
+  _target_: dbpo.dataset.robomimic_lowdim_dataset.RobomimicReplayLowdimDataset
+  dataset_path: ${task.env_dataset_path}
+  horizon: ${task.horizon_steps}
+  pad_before: 1
+  pad_after: 7
+  obs_keys: ${task.obs_keys}
+  abs_action: ${task.abs_action}
+  rotation_rep: rotation_6d
+  seed: ${seed}
+  val_ratio: 0.02
+
+runner:
+  _target_: dbpo.envs.runners.robomimic_lowdim_runner.RobomimicLowdimRunner
+  output_dir: ${logdir}
+  dataset_path: ${task.env_dataset_path}
+  obs_keys: ${task.obs_keys}
+  n_train: 6
+  n_train_vis: 2
+  n_test: 50
+  n_test_vis: 4
+  max_steps: ${task.max_steps}
+  n_obs_steps: ${task.n_obs_steps}
+  n_action_steps: ${task.n_action_steps}
+  abs_action: ${task.abs_action}
+
+env_cfg:
+  name: ${task.env}
+  env_type: robomimic
+  n_envs: 40
+  max_episode_steps: ${task.max_steps}
+  best_reward_threshold_for_success: 1.0
+  wrappers:
+    robomimic_lowdim:
+      low_dim_keys: ${task.obs_keys}
+    multi_step:
+      n_obs_steps: ${task.n_obs_steps}
+      n_action_steps: ${task.n_action_steps}
+      max_episode_steps: ${task.max_steps}
+      reset_within_step: true

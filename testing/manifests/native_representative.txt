@@ -1,0 +1,5 @@
+can_lowdim
+can_image
+pusht_image
+blockpush_lowdim_seed
+kitchen_lowdim
