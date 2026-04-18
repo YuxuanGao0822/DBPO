@@ -8,7 +8,7 @@
 ---
 
 <p align="center">
-  <img src="docs/figures/intro.pdf" alt="Method Comparison" width="100%">
+  <img src="docs/figures/intro.png" alt="Method Comparison" width="100%">
 </p>
 
 ## Overview
@@ -18,7 +18,7 @@ Robotic manipulation requires policies that can execute complex visuomotor tasks
 This repository introduces a training-centric solution that shifts iterative refinement from inference to training. The **Drift-Based Policy (DBP)** internalizes corrective dynamics through fixed-point drifting objectives during training, yielding a generator that produces high-quality multimodal actions in exactly one forward pass. The **Drift-Based Policy Optimization (DBPO)** framework extends this backbone to online reinforcement learning through a minimal stochastic interface that enables exact-likelihood PPO updates while preserving the deterministic one-step deployment path.
 
 <p align="center">
-  <img src="docs/figures/framework.pdf" alt="Method Framework" width="90%">
+  <img src="docs/figures/framework.png" alt="Method Framework" width="90%">
 </p>
 
 The approach addresses three core requirements: (1) native one-step generation without distillation or post-hoc acceleration, (2) multimodal action modeling capacity, and (3) stable online policy improvement. Empirical validation demonstrates that DBP matches or exceeds multi-step diffusion baselines at 100× lower inference cost, achieves state-of-the-art performance among one-step methods on point-cloud manipulation benchmarks, and enables effective online fine-tuning. Real-world deployment on a dual-arm UR5 robot confirms practical feasibility at 105.2 Hz control frequency.
