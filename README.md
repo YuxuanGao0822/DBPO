@@ -1,7 +1,9 @@
 # Drift-Based Policy Optimization (DBPO)
 
-**Official implementation of [Drift-Based Policy Optimization: Native One-Step Policy Learning for Online Robot Control](https://arxiv.org/abs/2604.03540)**
 🎉 **Accepted by ACM Multimedia 2026**
+
+**Official implementation of [Drift-Based Policy Optimization: Native One-Step Policy Learning for Online Robot Control](https://arxiv.org/abs/2604.03540)**
+
 *Yuxuan Gao, Yedong Shen, Shiqi Zhang, Wenhao Yu, Yifan Duan, Jia Pan, Jiajia Wu, Jiajun Deng, Yanyong Zhang*  
 *University of Science and Technology of China, iFLYTEK*
 
